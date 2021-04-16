@@ -10,6 +10,7 @@ use Livewire\Exceptions\NonPublicComponentMethodCall;
 use Livewire\Exceptions\PublicPropertyNotFoundException;
 use Livewire\Exceptions\MissingFileUploadsTraitException;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Support\Arr;
 use Livewire\HydrationMiddleware\HashDataPropertiesForDirtyDetection;
 use Livewire\Exceptions\CannotBindToModelDataWithoutValidationRuleException;
 use function Livewire\str;
@@ -20,12 +21,20 @@ trait HandlesActions
     {
         $propertyName = $this->beforeFirstDot($name);
 
+        if (str($propertyName)->endsWith('[]')) {
+            $propertyName = str($propertyName)->before('[]');
+        }
+
         throw_if(
             ($this->{$propertyName} instanceof Model || $this->{$propertyName} instanceof EloquentCollection) && $this->missingRuleFor($name),
             new CannotBindToModelDataWithoutValidationRuleException($name, $this::getName())
         );
 
         $this->callBeforeAndAfterSyncHooks($name, $value, function ($name, $value) use ($propertyName, $rehash) {
+            if ($isAppending = str($name)->endsWith('[]')) {
+                $name = str($name)->beforeLast('[]');
+            }
+
             throw_unless(
                 $this->propertyIsPublicAndNotDefinedOnBaseClass($propertyName),
                 new PublicPropertyNotFoundException($propertyName, $this::getName())
@@ -41,13 +50,25 @@ trait HandlesActions
                 $results = [];
                 $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
 
+                if ($isAppending) {
+                    $keyName .= '.' . count($results[$targetKey]);
+                }
+
                 // Merge in new data.
                 data_set($results, $keyName, $value);
 
                 // Re-assign data to model.
                 data_set($this->{$propertyName}, $targetKey, $results[$targetKey]);
+
+                if ($isAppending) {
+                    dd($this->{$propertyName});
+                }
             } else {
-                $this->{$name} = $value;
+                if ($isAppending) {
+                    $this->{$name}[] = $value;
+                } else {
+                    $this->{$name} = $value;
+                }
             }
 
             $rehash && HashDataPropertiesForDirtyDetection::rehashProperty($name, $value, $this);
@@ -129,7 +150,7 @@ trait HandlesActions
                 } else {
                     $currentValue = $this->{$prop};
                 }
-                
+
                 $this->syncInput($prop, ! $currentValue, $rehash = false);
 
                 return;

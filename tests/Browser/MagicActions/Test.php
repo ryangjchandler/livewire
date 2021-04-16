@@ -30,6 +30,15 @@ class Test extends TestCase
                 ->assertNotPresent('@appendItem')
                 ->waitForLivewire()->click('@appendTrigger')
                 ->assertPresent('@appendItem0')
+                ->waitForLivewire()->click('@appendTrigger')
+                ->assertPresent('@appendItem1')
+
+                // Append item using key.nested.accessor[] syntax
+                ->assertNotPresent('@nestedAppendItem')
+                ->waitForLivewire()->click('@nestedAppendTrigger')
+                ->assertPresent('@nestedAppendItem0')
+                ->waitForLivewire()->click('@nestedAppendTrigger')
+                ->assertPresent('@nestedAppendItem1')
             ;
         });
     }
