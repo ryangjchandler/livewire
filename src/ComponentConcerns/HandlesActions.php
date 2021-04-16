@@ -51,7 +51,9 @@ trait HandlesActions
                 $results[$targetKey] = data_get($this->{$propertyName}, $targetKey, []);
 
                 if ($isAppending) {
-                    $keyName .= '.' . count($results[$targetKey]);
+                    $target = data_get($results, $keyName, []);
+                    $targetIndex = count($target) > 0 ? count($target) : 0;
+                    $keyName .= ".{$targetIndex}";
                 }
 
                 // Merge in new data.
@@ -59,10 +61,6 @@ trait HandlesActions
 
                 // Re-assign data to model.
                 data_set($this->{$propertyName}, $targetKey, $results[$targetKey]);
-
-                if ($isAppending) {
-                    dd($this->{$propertyName});
-                }
             } else {
                 if ($isAppending) {
                     $this->{$name}[] = $value;

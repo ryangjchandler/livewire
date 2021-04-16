@@ -35,7 +35,7 @@ class Component extends BaseComponent
             <span dusk="nestedAppendItem{{ $index }}">{{ $item }}</span>
         @endforeach
     </div>
-    <button wire:click="$set('append.bar.baz[]', 'foo')" dusk="nestedAppendTrigger">Nested Append Item</button>
+    <button wire:click="$set('nestedAppend.bar.baz[]', 'foo')" dusk="nestedAppendTrigger">Nested Append Item</button>
 </div>
 HTML;
     }
